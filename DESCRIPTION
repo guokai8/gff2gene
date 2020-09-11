@@ -1,0 +1,12 @@
+Package: gff2gene
+Type: Package
+Title: Read gff, gtf, bed,bam or bw in to generate gene structure filgures
+Version: 0.0.1
+Author: Kai Guo
+Maintainer: Kai Guo <guokai8@gmail.com>
+Description: The package provide functions to read gff, gtf 
+    and other formats to generate gene structure figures
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
