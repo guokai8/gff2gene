@@ -7,6 +7,31 @@ Maintainer: Kai Guo <guokai8@gmail.com>
 Description: The package provide functions to read gff, gtf 
     and other formats to generate gene structure figures
 License: GPL-3
+Imports:
+    dplyr,
+    magrittr,
+    rlang,
+    tools,
+    ggplot2,
+    BiocGenerics,
+    IRanges,
+    tidyr,
+    broom,
+    GenomicRanges,
+    Biostrings,
+    S4Vectors,
+    scales,
+    ggrepel,
+    tibble,
+    grid,
+    readr,
+    rtracklayer,
+    BiocParallel
+Depends: R (>= 3.5.0)
+Suggests:
+    knitr,
+    testthat,
+    rmarkdown
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
