@@ -1,4 +1,4 @@
-#' @title plot Gene Track with SNP information
+#' @title plot Gene Structure with gff
 #' @importFrom IRanges subsetByOverlaps
 #' @importFrom IRanges IRanges
 #' @importFrom BiocGenerics start
