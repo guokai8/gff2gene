@@ -38,40 +38,23 @@
 #' @param color color for the point
 #' @param chr chromosome name
 #' @param region a vector include the start and the end location
-#' @param allchr choose TRUE when displaying whole chromosome or large region
 #' @param gene gene name
-#' @param threshold threshold to add the line
-#' @param geneOnly only show points in the gene region
-#' @param exonOnly only show points in the exon region
 #' @param upstream upstream bp
 #' @param downstream downstream bp
-#' @param alpha.point alpha
-#' @param point.size size of the point
-#' @param point.shape shape of the point
 #' @param exon exon color
 #' @param intron intron color
 #' @param utr3 3'utr color
 #' @param utr5 5'utr color
 #' @param gene.label.size size of the gene label
-#' @param high legend color
-#' @param low low legend color
-#' @param threshold.col color for threshold line
-#' @param threshold.lwd line width for threshold line
-#' @param threshold.lty line type for threshold line
-#' @param ylab ylab name
-#' @param ylab.size ylab size
 #' @param arrow.col arrow color
 #' @param arrow.fill arrow fill
 #' @export
 #' @author Kai Guo
-geneplot <- function(obj, dat, id = "gene_id", color=NULL, chr = NULL, region = NULL, allchr=FALSE,gene = NULL,
-                     threshold = -log10(1e-6),
+geneplot <- function(obj, id = "gene_id", color=NULL, chr = NULL, region = NULL, gene = NULL,
                      geneOnly = FALSE, exonOnly = FALSE,
-                     upstream = 1000, downstream = 1000, alpha.point =0.75, point.size = 1, point.shape = 20,
+                     upstream = 1000, downstream = 1000, 
                      exon = "darkgreen", utr3 = "cyan4", utr5 ="cyan4",intron = "black", gene.label.size = 0.5,
-                     high = "cyan4", low ="lightblue", threshold.col="red",
-                     threshold.lwd = 1, threshold.lty = 2,
-                     ylab="-log10 (P value)", legend.lab = NULL,
+                     ylab="Gene", legend.lab = NULL,
                      ylab.size = 0.9, arrow.col ="lightblue",arrow.fill = "lightblue"){
     #extrack object
     if(length(intersect(id,GFF3_COLNAMES))==0){
@@ -84,7 +67,7 @@ geneplot <- function(obj, dat, id = "gene_id", color=NULL, chr = NULL, region = 
     track <- track[track$feature%in%GENE_FEATURE,]
     track$featureID<-unlist(track$featureID)
     track$feature<-as.factor(as.character(track$feature))
-    names(elementMetadata(dat))[1]<-"scores"
+   # names(elementMetadata(dat))[1]<-"scores"
     unit <- 0.25
     y <- 0.5
     ## whether only draw some genes
@@ -107,97 +90,17 @@ geneplot <- function(obj, dat, id = "gene_id", color=NULL, chr = NULL, region = 
     start <- start(chr_r)
     end <- end(chr_r)
     xscale <- c(start,end)
-    ## extract data
-    dat <- subsetByOverlaps(dat,chr_r)
-    ## draw any point located in gene region
-    if(isTRUE(geneOnly)){
-        # single GRange range
-        # Can't use range directly
-        generegion <- Reduce(c,lapply(split(track,track$featureID),range))
-        dat <- subsetByOverlaps(dat,generegion,ignore.strand=TRUE)
-        if(length(dat$scores)<1) stop("No point in gene region\n")
-    }
-    ## draw any point only in exons or cds
-    if(isTRUE(exonOnly)){
-        exonregion <- track[track$feature%in%c("exon","CDS"),]
-        dat <- subsetByOverlaps(dat,exonregion,ignore.strand=TRUE)
-        if(length(dat$scores)<1) stop("No point in exon region\n")
-    }
     # yscale
-    yscale <- c(0,max(dat$scores) + 2)
-    ## point color scale
-    low <- low
-    high <- high
-    ## color for points
-    cols <- .color_scale(low, high)
-    md <- mcols(dat)
-    if(!is.null(color)){
-        mycol<- cols[sapply(md[,color], .getIdx, min(md[,color]), max(md[,color]))]
-        glab <- round(quantile(md[,color],c(0,0.25,0.75,1)),2)
-        if(is.null(legend.lab)) legend.lab <- color
-    }else{
-        mycol<- cols[sapply(md$scores, .getIdx, min(md$scores), max(md$scores))]
-        glab <- as.integer(quantile(min(md$scores):max(md$scores),c(0,0.25,0.75,1)))
-        if(is.null(legend.lab)) legend.lab <- "Scores"
-    }
     ### layout
     grid.newpage()
-    if(isTRUE(allchr)){
-        pushViewport(viewport(layout = grid.layout(2,3,
-                                                   widths =unit(c(1.5, 7, 1.5),
+    pushViewport(viewport(layout = grid.layout(2,3,
+                                                   widths =unit(c(0.5,8, 1.5),
                                                                 units = c("null","null","null")),
-                                                   heights = unit(c(8.5,1.5),units =c("null","null")))))
-    }else{
-        pushViewport(viewport(layout = grid.layout(3,3,
-                                                   widths =unit(c(1.5, 7, 1.5),
-                                                                units = c("null","null","null")),
-                                                   heights = unit(c(5.5,4.5,0.5),units =c("null","null","null")))))
-    }
-    # top part
-    vp <- viewport(layout.pos.row = 1,layout.pos.col = 2, xscale = xscale, yscale =yscale,
-                   height = unit(1, "npc"), width = unit(0.8, "npc"))
-    pushViewport(vp)
-    vp1 <- viewport(xscale = xscale, yscale = yscale, height = unit(1, "npc") - unit(1, "lines"))
-    pushViewport(vp1)
-    ## points
-    grid.points(x = start(dat), y = md$scores, default.units = "native", pch = point.shape, gp=gpar(col = mycol, alpha = alpha.point, cex = point.size))
-    # add lines
-    grid.lines(x=xscale,y=threshold,default.units = "native",gp=gpar(col=threshold.col,lwd=threshold.lwd,lty=threshold.lty))
-    # xyline<-xysmooth(start(dat),dat$scores,smooth = 5)
-    # grid.lines(x = xyline$x, y = xyline$y, default.units = "native")
-    if(isTRUE(allchr)){
-        len <- end - start + 1
-        if(len > 50000){
-            xticklab <- paste0(round(grid.pretty(range = c(start, end))/1000000, 2), "Mb")
-        }else if(len > 5000 & len <= 50000){
-            xticklab <- paste0(round(grid.pretty(range = c(start, end))/1000, 2), "Kb")
-        }else{
-            xticklab <- grid.pretty(range = c(start, end))
-        }
-        grid.xaxis(at = grid.pretty(range = c(start,end)),label = xticklab)
-    }
-    grid.lines(x = c(0, 1), y = 0, default.units = "npc")
-    grid.yaxis(name="ya")
-    grid.text(label = ylab, x = - unit(2.5, "lines"), y = unit(max(yscale)*0.7, "native"), just="bottom", rot = 90,name="ytext",gpar(cex=ylab.size))
-    popViewport()
-    popViewport()
-    ### legend
-    vp <- viewport(layout.pos.row = 1, layout.pos.col = 3,
-                   height = unit(0.5, "npc"), width=unit(1,"npc"))
-    pushViewport(vp)
-    vpg <- viewport(x=unit(0.3, "npc"), y = unit(0.5, "npc"), height = unit(0.8, "npc") - unit(1, "lines"), width = unit(0.5,"npc"))
-    pushViewport(vpg)
-    #legend color and label
-    grid.raster(x = 0.6, y = 0.7, image = rev(cols), width = 0.3, default.units = "npc", height = 0.6)
-    grid.text(x =  0.8, y = c(0.4, 0.6, 0.8, 0.98), label = glab,default.units = "npc", gp = gpar(cex = 0.8),just="left")
-    grid.text(x = 0.2, y = 0.7, default.units = "npc", label = legend.lab, gp = gpar(cex = 1), rot = 90)
-    popViewport()
-    popViewport()
+                                                   heights = unit(c(9.5,0.5),units =c("null","null","null")))))
     #####################################################
     ## gene structure
     ## modify from trackViewer plotGeneTrack function
-    if(isFALSE(allchr)){
-        vp <- viewport(layout.pos.row = 2,layout.pos.col = 2, xscale = xscale, y=0, height = 1,width = 0.8)
+        vp <- viewport(layout.pos.row = 1,layout.pos.col = 2, xscale = xscale, y=0, height = 1,width = 0.8)
         pushViewport(vp)
         vp2 <- viewport(xscale = xscale, y=unit(0.6, "npc"),height = unit(0.8, "npc"))
         pushViewport(vp2)
@@ -355,7 +258,7 @@ geneplot <- function(obj, dat, id = "gene_id", color=NULL, chr = NULL, region = 
         grid.xaxis(at = grid.pretty(range = c(start,end)),label = xticklab)
         popViewport()
         popViewport()
-        vp <- viewport(layout.pos.row = 2, layout.pos.col = 3, x=0.5, y=0.5, height = 0.5, width = 0.8)
+        vp <- viewport(layout.pos.row = 1, layout.pos.col = 3, x=0.5, y=0.5, height = 0.5, width = 0.8)
         pushViewport(vp)
         vp3 <- viewport(x = unit(0.5, "npc"), y=unit(0.5, "npc"),height = unit(0.8, "npc"))
         pushViewport(vp3)
@@ -368,7 +271,6 @@ geneplot <- function(obj, dat, id = "gene_id", color=NULL, chr = NULL, region = 
         }
         popViewport()
         popViewport()
-    }
     grid.clip()
     return(invisible())
 }
